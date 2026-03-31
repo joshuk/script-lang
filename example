@@ -1,0 +1,9 @@
+const x = -20.5
+const minusX = -x
+const test = "test"
+const y = (-1 + 2 + -x) / (1 * 3)
+const y2 = -y
+const z = "tes't"
+const z2 = ("tes't" . (' ~ as\'df - ' . z))
+const isTrue = true
+const isFalse = false
