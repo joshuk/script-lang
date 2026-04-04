@@ -3,6 +3,7 @@ import { getBooleanValue, isBoolean } from '../helpers/types/boolean.mjs'
 import { isNumber } from '../helpers/types/number.mjs'
 import { getStringValue, isString } from '../helpers/types/string.mjs'
 import Arithmetic from './arithmetic.mjs'
+import Boolean from './boolean.mjs'
 import Strings from './strings.mjs'
 import Variables from './variables.mjs'
 
@@ -11,8 +12,13 @@ class Logic {
     this.variables = new Variables(this)
     this.arithmetic = new Arithmetic(this)
     this.strings = new Strings(this)
+    this.boolean = new Boolean(this)
 
-    this.operators = [...this.arithmetic.operators, this.strings.operator]
+    this.operators = [
+      ...this.arithmetic.operators,
+      this.strings.operator,
+      ...this.boolean.operators,
+    ]
   }
 
   getTokenValue(token) {
@@ -131,6 +137,9 @@ class Logic {
 
     output = this.strings.combineStrings(output)
 
+    output = this.boolean.combineOperators(output)
+    output = this.boolean.containBooleanEquations(output)
+
     output = output.map(token =>
       typeof token === 'string' ? token.trim() : token
     )
@@ -142,22 +151,12 @@ class Logic {
     return output
   }
 
-  getFirstTokenType(token) {
-    if (Array.isArray(token)) {
-      return this.getFirstTokenType(token[0])
-    }
-
-    const tokenValue = this.getTokenValue(token)
-
-    return tokenValue.type
-  }
-
   evaluateTokens(tokens) {
     if (tokens.includes(this.strings.operator)) {
       const result = this.strings.getConcatenationResult(tokens)
 
       return {
-        type: 'number',
+        type: 'string',
         value: result,
       }
     }
@@ -167,6 +166,15 @@ class Logic {
 
       return {
         type: 'number',
+        value: result,
+      }
+    }
+
+    if (areItemsInArray(tokens, this.boolean.logicOperators)) {
+      const result = this.boolean.evaluateBoolean(tokens)
+
+      return {
+        type: 'boolean',
         value: result,
       }
     }

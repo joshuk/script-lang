@@ -144,7 +144,7 @@ class Arithmetic {
   }
 
   combineNegativeNumbers(tokens) {
-    const operators = [...this.operators, '.']
+    const operators = this.logic.operators
     const outputTokens = []
     let index = 0
 
