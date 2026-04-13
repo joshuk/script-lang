@@ -1,3 +1,4 @@
+import { TYPES } from '../constants.mjs'
 import { getError } from '../helpers/errors.mjs'
 import { stripWhitespace } from '../helpers/string.mjs'
 import { isNumber } from '../helpers/types/number.mjs'
@@ -21,7 +22,7 @@ class Arithmetic {
     if (this.logic.variables.isVariable(token)) {
       const variable = this.logic.variables.getVariable(token)
 
-      if (variable.type !== 'number') {
+      if (variable.type !== TYPES.number) {
         throw new Error(`Variable '${token}' is not of type 'number'`)
       }
 
@@ -166,7 +167,7 @@ class Arithmetic {
 
         if (
           (!isVariable && !isNumber(nextToken)) ||
-          (isVariable && variable.type !== 'number')
+          (isVariable && variable.type !== TYPES.number)
         ) {
           throw new Error(`Unexpected -`)
         }

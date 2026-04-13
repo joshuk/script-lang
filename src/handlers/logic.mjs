@@ -1,3 +1,4 @@
+import { TYPES } from '../constants.mjs'
 import { areItemsInArray } from '../helpers/array.mjs'
 import { getBooleanValue, isBoolean } from '../helpers/types/boolean.mjs'
 import { isNumber } from '../helpers/types/number.mjs'
@@ -24,28 +25,28 @@ class Logic {
   getTokenValue(token) {
     if (token === 'null') {
       return {
-        type: null,
+        type: TYPES.null,
         value: null,
       }
     }
 
     if (isNumber(token)) {
       return {
-        type: 'number',
+        type: TYPES.number,
         value: Number(token),
       }
     }
 
     if (isString(token)) {
       return {
-        type: 'string',
+        type: TYPES.string,
         value: getStringValue(token),
       }
     }
 
     if (isBoolean(token)) {
       return {
-        type: 'boolean',
+        type: TYPES.boolean,
         value: getBooleanValue(token),
       }
     }
@@ -156,7 +157,7 @@ class Logic {
       const result = this.strings.getConcatenationResult(tokens)
 
       return {
-        type: 'string',
+        type: TYPES.string,
         value: result,
       }
     }
@@ -165,7 +166,7 @@ class Logic {
       const result = this.arithmetic.calculateArithmetic(tokens)
 
       return {
-        type: 'number',
+        type: TYPES.number,
         value: result,
       }
     }
@@ -174,7 +175,7 @@ class Logic {
       const result = this.boolean.evaluateBoolean(tokens)
 
       return {
-        type: 'boolean',
+        type: TYPES.boolean,
         value: result,
       }
     }

@@ -1,3 +1,4 @@
+import { TYPES } from '../constants.mjs'
 import {
   getStringValue,
   getUnescapedQuoteIndexes,
@@ -110,7 +111,7 @@ class Strings {
       if (isVariable) {
         const variable = this.logic.variables.getVariable(token)
 
-        if (variable.type !== 'string') {
+        if (variable.type !== TYPES.string) {
           throw new Error(`Variable '${token}' is not of type 'string'`)
         }
 

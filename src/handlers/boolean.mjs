@@ -1,3 +1,4 @@
+import { TYPES } from '../constants.mjs'
 import { areItemsInArray } from '../helpers/array.mjs'
 import { stringsAreInString } from '../helpers/string.mjs'
 
@@ -93,11 +94,11 @@ class Boolean {
         }
 
         if (stringsAreInString(['<', '>'], token)) {
-          if (previousTokenValue.type !== 'number') {
+          if (previousTokenValue.type !== TYPES.number) {
             throw new Error(`Token '${previousToken}' is not of type 'number'`)
           }
 
-          if (nextTokenValue.type !== 'number') {
+          if (nextTokenValue.type !== TYPES.number) {
             throw new Error(`Token '${nextToken}' is not of type 'number'`)
           }
 
@@ -153,11 +154,11 @@ class Boolean {
         const previousTokenValue = this.getTokenValue(previousToken)
         const nextTokenValue = this.getTokenValue(nextToken)
 
-        if (previousTokenValue.type !== 'boolean') {
+        if (previousTokenValue.type !== TYPES.boolean) {
           throw new Error(`Token '${previousToken}' is not of type 'boolean'`)
         }
 
-        if (nextTokenValue.type !== 'boolean') {
+        if (nextTokenValue.type !== TYPES.boolean) {
           throw new Error(`Token '${nextToken}' is not of type 'boolean'`)
         }
 
