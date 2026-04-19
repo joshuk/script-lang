@@ -1,4 +1,4 @@
-import { TYPES } from '../constants.mjs'
+import { GLOBAL_SCOPE, TYPES } from '../constants.mjs'
 import { areItemsInArray } from '../helpers/array.mjs'
 import { getBooleanValue, isBoolean } from '../helpers/types/boolean.mjs'
 import { isNumber } from '../helpers/types/number.mjs'
@@ -20,6 +20,8 @@ class Logic {
       this.strings.operator,
       ...this.boolean.operators,
     ]
+
+    this.visibleScopes = [GLOBAL_SCOPE]
   }
 
   getTokenValue(token) {
@@ -198,6 +200,18 @@ class Logic {
     const result = this.evaluateTokens(cleanedTokens)
 
     return result
+  }
+
+  expressionIsTrue(expression) {
+    const result = this.getExpressionValue(expression)
+
+    if (result.type !== TYPES.boolean) {
+      throw new Error(
+        `Expression '${expression}' does not evaluate to a boolean`
+      )
+    }
+
+    return result.value === true
   }
 }
 

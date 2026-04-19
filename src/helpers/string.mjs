@@ -21,3 +21,15 @@ export const getAllIndexesOfStringInString = (needle, haystack) => {
 
   return output
 }
+
+export const getCharacterLengthAtStart = (string, character = ' ') => {
+  let length = 0
+
+  for (let i = 0; i < string.length; i++) {
+    if (string[i] !== character) {
+      return length
+    }
+
+    length += 1
+  }
+}

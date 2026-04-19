@@ -7,3 +7,7 @@ export const areItemsInArray = (items, array) => {
 
   return false
 }
+
+export const last = array => {
+  return array[array.length - 1]
+}
