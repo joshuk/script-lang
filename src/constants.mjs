@@ -13,6 +13,7 @@ export const LINE_TYPES = {
   variableUpdate: 'variableUpdate',
   ifCondition: 'ifCondition',
   closingBracket: 'closingBracket',
+  else: 'else',
 }
 
 export const GLOBAL_SCOPE = getScope(null, 0, 0)

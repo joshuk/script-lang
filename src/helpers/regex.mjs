@@ -21,7 +21,10 @@ const lineTypes = {
     regex: new RegExp(`^if${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{`),
   },
   [LINE_TYPES.closingBracket]: {
-    regex: new RegExp('}'),
+    regex: new RegExp('^}$'),
+  },
+  [LINE_TYPES.else]: {
+    regex: new RegExp(`^}${whitespaceChar}*else${whitespaceChar}*{$`),
   },
 }
 

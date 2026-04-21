@@ -5,6 +5,7 @@ import Logic from './logic.mjs'
 import { getCharacterLengthAtStart } from '../helpers/string.mjs'
 import { getScope } from '../helpers/scope.mjs'
 import { LINE_TYPES } from '../constants.mjs'
+import { last } from '../helpers/array.mjs'
 
 class Parser {
   constructor() {
@@ -12,6 +13,22 @@ class Parser {
     this.lines = []
 
     this.logic = new Logic()
+  }
+
+  getNextLineTypeWithIndent(types, indent) {
+    for (let i = this.programCounter; i < this.lines.length; i++) {
+      const line = this.lines[i]
+      const indentation = getCharacterLengthAtStart(line)
+      const lineType = getLineType(line)
+
+      if (!types.includes(lineType.type) || indentation !== indent) {
+        continue
+      }
+
+      return i
+    }
+
+    return null
   }
 
   handleConditional(type, matches) {
@@ -25,27 +42,71 @@ class Parser {
         getScope(type, this.programCounter, currentIndentation)
       )
 
-      return 1
+      return this.programCounter + 1
     }
 
-    for (let i = this.programCounter; i < this.lines.length; i++) {
-      const line = this.lines[i]
-      const lineType = getLineType(line)
+    const acceptedTypes = [LINE_TYPES.closingBracket]
 
-      if (lineType.type !== LINE_TYPES.closingBracket) {
-        continue
-      }
-
-      const indentation = getCharacterLengthAtStart(line)
-
-      if (indentation === currentIndentation) {
-        const difference = i - this.programCounter
-
-        return difference + 1
-      }
+    if (type === LINE_TYPES.ifCondition) {
+      acceptedTypes.push(LINE_TYPES.else)
     }
 
-    throw new Error(`Closing bracket not found`)
+    const nextLineIndex = this.getNextLineTypeWithIndent(
+      acceptedTypes,
+      currentIndentation
+    )
+
+    if (nextLineIndex === null) {
+      throw new Error('Closing bracket not found')
+    }
+
+    const lineType = getLineType(this.lines[nextLineIndex])
+
+    if (lineType.type === LINE_TYPES.else) {
+      this.logic.visibleScopes.push(
+        getScope(LINE_TYPES.else, nextLineIndex, currentIndentation)
+      )
+    }
+
+    switch (type) {
+      default:
+        return nextLineIndex + 1
+    }
+  }
+
+  handleElse() {
+    const currentScope = last(this.logic.visibleScopes)
+    const closingBracketIndex = this.getNextLineTypeWithIndent(
+      LINE_TYPES.closingBracket,
+      currentScope.indent
+    )
+
+    if (closingBracketIndex === null) {
+      throw new Error('Closing bracket not found')
+    }
+
+    this.logic.visibleScopes.pop()
+
+    return closingBracketIndex + 1
+  }
+
+  handleClosingBracket() {
+    const line = this.lines[this.programCounter]
+    const currentIndentation = getCharacterLengthAtStart(line)
+    const currentScope = last(this.logic.visibleScopes)
+
+    if (currentScope.indent !== currentIndentation) {
+      throw new Error(
+        `Indentation must match conditional at line ${currentScope.line}`
+      )
+    }
+
+    this.logic.visibleScopes.pop()
+
+    switch (currentScope.type) {
+      default:
+        return this.programCounter + 1
+    }
   }
 
   parseLine() {
@@ -84,13 +145,13 @@ class Parser {
         this.programCounter += 1
         break
       case LINE_TYPES.ifCondition:
-        this.programCounter += this.handleConditional('if', matches)
+        this.programCounter = this.handleConditional(type, matches)
+        break
+      case LINE_TYPES.else:
+        this.programCounter = this.handleElse()
         break
       case LINE_TYPES.closingBracket:
-        // TODO - Add checks in here, this makes assumptions
-        this.logic.visibleScopes.pop()
-
-        this.programCounter += 1
+        this.programCounter = this.handleClosingBracket()
         break
       case LINE_TYPES.comment:
         this.programCounter += 1
