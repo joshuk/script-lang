@@ -26,7 +26,23 @@ if (test != 'test') {
 
   if (true) {
     test123 += 123
+
+    const newTest123 = null
   }
 } else {
   newVariable .= ' - else'
+}
+
+let number = 0
+const max = 10
+let output = ''
+
+while (number < max) {
+  output .= 'test'
+
+  if (number != (max - 1)) {
+    output .= ' '
+  }
+
+  number += 1
 }

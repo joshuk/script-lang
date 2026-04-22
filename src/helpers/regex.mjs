@@ -9,22 +9,25 @@ const lineTypes = {
   },
   [LINE_TYPES.variableDeclaration]: {
     regex: new RegExp(
-      `^(const|let)(?:${whitespaceChar}+([${variableName}]+)(?:${whitespaceChar}*=${whitespaceChar}*(.+))*)`
+      `^(const|let)(?:${whitespaceChar}+([${variableName}]+)(?:${whitespaceChar}*=${whitespaceChar}*(.+))*)$`
     ),
   },
   [LINE_TYPES.variableUpdate]: {
     regex: new RegExp(
-      `^([${variableName}]+)${whitespaceChar}*(.){0,1}=${whitespaceChar}*(.+)`
+      `^([${variableName}]+)${whitespaceChar}*(.){0,1}=${whitespaceChar}*(.+)$`
     ),
   },
   [LINE_TYPES.ifCondition]: {
-    regex: new RegExp(`^if${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{`),
+    regex: new RegExp(`^if${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{$`),
   },
   [LINE_TYPES.closingBracket]: {
     regex: new RegExp('^}$'),
   },
   [LINE_TYPES.else]: {
     regex: new RegExp(`^}${whitespaceChar}*else${whitespaceChar}*{$`),
+  },
+  [LINE_TYPES.whileCondition]: {
+    regex: new RegExp(`^while${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{$`),
   },
 }
 

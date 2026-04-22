@@ -68,14 +68,16 @@ class Parser {
       )
     }
 
-    switch (type) {
-      default:
-        return nextLineIndex + 1
-    }
+    return nextLineIndex + 1
   }
 
   handleElse() {
     const currentScope = last(this.logic.visibleScopes)
+
+    if (currentScope.type !== LINE_TYPES.ifCondition) {
+      throw new Error('Corresponding if condition not found')
+    }
+
     const closingBracketIndex = this.getNextLineTypeWithIndent(
       LINE_TYPES.closingBracket,
       currentScope.indent
@@ -104,6 +106,8 @@ class Parser {
     this.logic.visibleScopes.pop()
 
     switch (currentScope.type) {
+      case LINE_TYPES.whileCondition:
+        return currentScope.line
       default:
         return this.programCounter + 1
     }
@@ -145,6 +149,7 @@ class Parser {
         this.programCounter += 1
         break
       case LINE_TYPES.ifCondition:
+      case LINE_TYPES.whileCondition:
         this.programCounter = this.handleConditional(type, matches)
         break
       case LINE_TYPES.else:
