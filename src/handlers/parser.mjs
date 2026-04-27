@@ -5,14 +5,13 @@ import Logic from './logic.mjs'
 import { getCharacterLengthAtStart } from '../helpers/string.mjs'
 import { getScope } from '../helpers/scope.mjs'
 import { LINE_TYPES } from '../constants.mjs'
-import { last } from '../helpers/array.mjs'
 
 class Parser {
   constructor() {
     this.programCounter = 0
     this.lines = []
 
-    this.logic = new Logic()
+    this.logic = new Logic(this)
   }
 
   getNextLineTypeWithIndent(types, indent) {
@@ -72,7 +71,7 @@ class Parser {
   }
 
   handleElse() {
-    const currentScope = last(this.logic.visibleScopes)
+    const currentScope = this.logic.getCurrentScope()
 
     if (currentScope.type !== LINE_TYPES.ifCondition) {
       throw new Error('Corresponding if condition not found')
@@ -95,7 +94,7 @@ class Parser {
   handleClosingBracket() {
     const line = this.lines[this.programCounter]
     const currentIndentation = getCharacterLengthAtStart(line)
-    const currentScope = last(this.logic.visibleScopes)
+    const currentScope = this.logic.getCurrentScope()
 
     if (currentScope.indent !== currentIndentation) {
       throw new Error(
@@ -111,6 +110,31 @@ class Parser {
       default:
         return this.programCounter + 1
     }
+  }
+
+  handleFunction(matches) {
+    const line = this.lines[this.programCounter]
+    const [, name, args] = matches
+
+    const functionInfo = this.logic.functions.getFunctionInfo(name, args)
+    const currentIndentation = getCharacterLengthAtStart(line)
+
+    const closingBracketIndex = this.getNextLineTypeWithIndent(
+      [LINE_TYPES.closingBracket],
+      currentIndentation
+    )
+
+    if (closingBracketIndex === null) {
+      throw new Error('Closing bracket not found')
+    }
+
+    this.logic.functions.registerFunction({
+      ...functionInfo,
+      startLine: this.programCounter + 1,
+      endLine: closingBracketIndex,
+    })
+
+    return closingBracketIndex + 1
   }
 
   parseLine() {
@@ -157,6 +181,9 @@ class Parser {
         break
       case LINE_TYPES.closingBracket:
         this.programCounter = this.handleClosingBracket()
+        break
+      case LINE_TYPES.function:
+        this.programCounter += this.handleFunction(matches)
         break
       case LINE_TYPES.comment:
         this.programCounter += 1

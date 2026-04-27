@@ -15,6 +15,7 @@ export const LINE_TYPES = {
   closingBracket: 'closingBracket',
   else: 'else',
   whileCondition: 'whileCondition',
+  function: 'function',
 }
 
 export const GLOBAL_SCOPE = getScope(null, 0, 0)

@@ -1,9 +1,17 @@
 import Parser from './src/handlers/parser.mjs'
+;(() => {
+  const args = process.argv.slice(2)
 
-const startTime = performance.now()
+  if (args[0] !== '-f' || !args[1]) {
+    console.log('Argument -f must be passed with a valid filename')
+    return
+  }
 
-const parser = new Parser()
+  const startTime = performance.now()
 
-parser.parseFile('example.scl')
+  const parser = new Parser()
 
-console.log(`Execution time: ${performance.now() - startTime}ms`)
+  parser.parseFile(`scripts/${args[1]}`)
+
+  console.log(`Execution time: ${performance.now() - startTime}ms`)
+})()

@@ -1,4 +1,4 @@
-import { LINE_TYPES } from '../constants.mjs'
+import { LINE_TYPES, TYPES } from '../constants.mjs'
 
 const whitespaceChar = '[\\s]'
 const variableName = '\\d\\w_'
@@ -29,7 +29,16 @@ const lineTypes = {
   [LINE_TYPES.whileCondition]: {
     regex: new RegExp(`^while${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{$`),
   },
+  [LINE_TYPES.function]: {
+    regex: new RegExp(
+      `^function${whitespaceChar}*([${variableName}]*)\\((.*)\\)${whitespaceChar}*{$`
+    ),
+  },
 }
+
+export const functionArgument = new RegExp(
+  `([${variableName}]*):([\\w]*)(?:${whitespaceChar}*=${whitespaceChar}*(.*)){0,1}`
+)
 
 export const getLineType = line => {
   line = line.trim()

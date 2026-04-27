@@ -1,3 +1,4 @@
+import { TYPES } from '../constants.mjs'
 import { last } from '../helpers/array.mjs'
 import { getError } from '../helpers/errors.mjs'
 import { isVariableNameValid } from '../helpers/variables.mjs'
@@ -27,7 +28,7 @@ class Variables {
     return this.variables[name]
   }
 
-  setNewVariable(defType, type, name, value) {
+  registerVariable(defType, type, name, value) {
     this.variables[name] = {
       isConst: defType === 'const',
       type,
@@ -36,12 +37,16 @@ class Variables {
     }
   }
 
-  setVariable(name, value) {
+  setVariable(type, name, value) {
     if (!this.isVariable(name)) {
       throw new Error(`Unknown variable '${name}'`)
     }
 
-    this.variables[name].value = value
+    this.variables[name] = {
+      ...this.variables[name],
+      type,
+      value,
+    }
   }
 
   initVariable(matches) {
@@ -70,7 +75,7 @@ class Variables {
     try {
       const { type, value } = this.logic.getExpressionValue(assignedValue)
 
-      this.setNewVariable(defType, type, name, value)
+      this.registerVariable(defType, type, name, value)
     } catch (e) {
       const errorIndex = matches.input.indexOf('=') + 2
 
@@ -103,9 +108,15 @@ class Variables {
     }
 
     try {
-      const { value } = this.logic.getExpressionValue(query)
+      const { type, value } = this.logic.getExpressionValue(query)
 
-      this.setVariable(name, value)
+      if (variable.type !== TYPES.null && variable.type !== type) {
+        throw new Error(
+          `Expression '${query}' is not of type '${variable.type}'`
+        )
+      }
+
+      this.setVariable(type, name, value)
     } catch (e) {
       const errorIndex = matches.input.indexOf('=') + 2
 

@@ -1,0 +1,33 @@
+let animal = 'dog'
+
+let noise = null
+
+if (animal == 'cow') {
+  noise = 'moo'
+}
+
+if (animal == 'dog') {
+  noise = 'woof'
+}
+
+const noiseCount = 3
+
+let output = 'The ' . animal . ' says "'
+
+let number = 0
+
+while (number < noiseCount) {
+  let endCharacter = null
+
+  if (number != (noiseCount - 1)) {
+    endCharacter = ' '
+  } else {
+    endCharacter = '!'
+  }
+
+  output .= noise . endCharacter
+
+  number += 1
+}
+
+output .= '"'

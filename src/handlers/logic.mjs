@@ -1,19 +1,22 @@
 import { GLOBAL_SCOPE, TYPES } from '../constants.mjs'
-import { areItemsInArray } from '../helpers/array.mjs'
+import { areItemsInArray, last } from '../helpers/array.mjs'
 import { getBooleanValue, isBoolean } from '../helpers/types/boolean.mjs'
 import { isNumber } from '../helpers/types/number.mjs'
 import { getStringValue, isString } from '../helpers/types/string.mjs'
 import Arithmetic from './arithmetic.mjs'
 import Boolean from './boolean.mjs'
+import Functions from './functions.mjs'
 import Strings from './strings.mjs'
 import Variables from './variables.mjs'
 
 class Logic {
-  constructor() {
+  constructor(parser) {
+    this.parser = parser
     this.variables = new Variables(this)
     this.arithmetic = new Arithmetic(this)
     this.strings = new Strings(this)
     this.boolean = new Boolean(this)
+    this.functions = new Functions(this)
 
     this.operators = [
       ...this.arithmetic.operators,
@@ -22,6 +25,10 @@ class Logic {
     ]
 
     this.visibleScopes = [GLOBAL_SCOPE]
+  }
+
+  getCurrentScope() {
+    return last(this.visibleScopes)
   }
 
   getTokenValue(token) {
