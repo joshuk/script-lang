@@ -1,16 +1,20 @@
 import { TYPES } from '../constants.mjs'
-import { last } from '../helpers/array.mjs'
 import { getError } from '../helpers/errors.mjs'
 import { isVariableNameValid } from '../helpers/variables.mjs'
 
 class Variables {
   constructor(logic) {
     this.variables = {}
+    this.functionArgs = {}
 
     this.logic = logic
   }
 
   isVariable(name) {
+    if (this.functionArgs[name]) {
+      return true
+    }
+
     const variable = this.variables[name]
 
     if (variable && this.logic.visibleScopes.includes(variable.scope)) {
@@ -21,6 +25,10 @@ class Variables {
   }
 
   getVariable(name) {
+    if (this.functionArgs[name]) {
+      return this.functionArgs[name]
+    }
+
     if (!this.isVariable(name)) {
       throw new Error(`Unknown variable '${name}'`)
     }
@@ -33,7 +41,7 @@ class Variables {
       isConst: defType === 'const',
       type,
       value,
-      scope: last(this.logic.visibleScopes),
+      scope: this.logic.getCurrentScope(),
     }
   }
 
@@ -56,13 +64,20 @@ class Variables {
 
     if (!variableNameValid.isValid) {
       const position = variableNameValid.errorPosition
-      const column = type.length + position + 1
+      const column = defType.length + position + 1
 
       throw getError(`Variable name '${name}' is invalid`, column)
     }
 
     if (!assignedValue) {
       throw getError(`Variable '${name}' must have a value`, line.length - 1)
+    }
+
+    if (this.logic.functions.isFunction(name)) {
+      throw getError(
+        `'${name}' is already defined as a function`,
+        defType.length + 1
+      )
     }
 
     if (this.isVariable(name)) {
@@ -122,6 +137,14 @@ class Variables {
 
       throw getError(e.message, errorIndex)
     }
+  }
+
+  setFunctionArgs(args) {
+    this.functionArgs = args
+  }
+
+  clearFunctionArgs(args) {
+    this.functionArgs = {}
   }
 }
 

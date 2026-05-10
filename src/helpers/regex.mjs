@@ -29,10 +29,13 @@ const lineTypes = {
   [LINE_TYPES.whileCondition]: {
     regex: new RegExp(`^while${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{$`),
   },
-  [LINE_TYPES.function]: {
+  [LINE_TYPES.functionDeclaration]: {
     regex: new RegExp(
       `^function${whitespaceChar}*([${variableName}]*)\\((.*)\\)${whitespaceChar}*{$`
     ),
+  },
+  [LINE_TYPES.return]: {
+    regex: new RegExp(`^return${whitespaceChar}*(.*)$`),
   },
 }
 

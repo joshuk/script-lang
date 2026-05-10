@@ -1,6 +1,8 @@
 import { GLOBAL_SCOPE, TYPES } from '../constants.mjs'
 import { areItemsInArray, last } from '../helpers/array.mjs'
+import { getError } from '../helpers/errors.mjs'
 import { getBooleanValue, isBoolean } from '../helpers/types/boolean.mjs'
+import { isFunction } from '../helpers/types/function.mjs'
 import { isNumber } from '../helpers/types/number.mjs'
 import { getStringValue, isString } from '../helpers/types/string.mjs'
 import Arithmetic from './arithmetic.mjs'
@@ -22,13 +24,14 @@ class Logic {
       ...this.arithmetic.operators,
       this.strings.operator,
       ...this.boolean.operators,
+      ...this.functions.operators,
     ]
 
     this.visibleScopes = [GLOBAL_SCOPE]
   }
 
   getCurrentScope() {
-    return last(this.visibleScopes)
+    return last([...this.visibleScopes])
   }
 
   getTokenValue(token) {
@@ -37,6 +40,10 @@ class Logic {
         type: TYPES.null,
         value: null,
       }
+    }
+
+    if (isFunction(token)) {
+      return this.functions.getFunctionResult(token)
     }
 
     if (isNumber(token)) {
@@ -75,6 +82,9 @@ class Logic {
     let buffer = ''
     let level = 0
 
+    let isInString = false
+    let quoteCharacter = null
+
     const pushToStack = item => {
       if (typeof item === 'string' && item.trim() === '') {
         return
@@ -96,7 +106,7 @@ class Logic {
         pushToStack(newGroup)
         stack.push(newGroup)
         level += 1
-      } else if (char === ')') {
+      } else if (char === ')' && !isInString) {
         if (level === 0) {
           throw getError('Unexpected )', i)
         }
@@ -116,6 +126,20 @@ class Logic {
 
         pushToStack(char)
       } else {
+        if (['"', "'"].includes(char)) {
+          if (!isInString && string[i - 1] !== '\\') {
+            isInString = true
+            quoteCharacter = char
+          } else if (
+            isInString &&
+            quoteCharacter === char &&
+            string[i - 1] !== '\\'
+          ) {
+            isInString = false
+            quoteCharacter = null
+          }
+        }
+
         buffer += char
       }
     }
@@ -149,6 +173,8 @@ class Logic {
 
     output = this.boolean.combineOperators(output)
     output = this.boolean.containBooleanEquations(output)
+
+    output = this.functions.formatFunctionTokens(output)
 
     output = output.map(token =>
       typeof token === 'string' ? token.trim() : token

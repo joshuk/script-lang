@@ -1,5 +1,6 @@
-export const getScope = (type, line, indent) => {
+export const getScope = (id, type, line, indent) => {
   return {
+    id,
     type,
     line,
     indent,

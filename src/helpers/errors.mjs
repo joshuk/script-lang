@@ -2,7 +2,7 @@ export const getError = (message, column) => {
   const error = new Error(message)
 
   error.position = {
-    column
+    column,
   }
 
   return error

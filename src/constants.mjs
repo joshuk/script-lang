@@ -4,7 +4,7 @@ export const TYPES = {
   number: 'number',
   boolean: 'boolean',
   string: 'string',
-  null: null,
+  null: 'null',
 }
 
 export const LINE_TYPES = {
@@ -15,7 +15,8 @@ export const LINE_TYPES = {
   closingBracket: 'closingBracket',
   else: 'else',
   whileCondition: 'whileCondition',
-  function: 'function',
+  functionDeclaration: 'functionDeclaration',
+  return: 'return',
 }
 
-export const GLOBAL_SCOPE = getScope(null, 0, 0)
+export const GLOBAL_SCOPE = getScope(null, null, 0, 0)

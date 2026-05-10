@@ -6,7 +6,94 @@ class Functions {
   constructor(logic) {
     this.logic = logic
 
-    this.functions = []
+    this.operators = [',']
+
+    this.functions = {}
+  }
+
+  isFunction(name) {
+    const func = this.functions[name]
+
+    if (func && this.logic.visibleScopes.includes(func.scope)) {
+      return true
+    }
+
+    return false
+  }
+
+  getFunction(name) {
+    if (!this.isFunction(name)) {
+      throw new Error(`Undefined function '${name}'`)
+    }
+
+    return this.functions[name]
+  }
+
+  registerFunction(id, functionInfo, startLine, endLine, innerScope) {
+    const { name } = functionInfo
+
+    if (this.logic.variables.isVariable(name)) {
+      throw new Error(`'${name}' is already defined as a variable`)
+    }
+
+    if (this.isFunction(name)) {
+      throw new Error(`Function '${name}' is already defined`)
+    }
+
+    this.functions[name] = {
+      id,
+      ...functionInfo,
+      startLine,
+      endLine,
+      scope: this.logic.getCurrentScope(),
+      innerScope,
+    }
+  }
+
+  formatArgTokens(tokens) {
+    const output = []
+    let stack = []
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i]
+
+      if (this.operators.includes(token)) {
+        output.push(stack)
+        stack = []
+        continue
+      }
+
+      stack.push(token)
+    }
+
+    output.push(stack)
+
+    return output
+  }
+
+  formatFunctionTokens(tokens) {
+    let index = 0
+    const output = []
+
+    while (index < tokens.length) {
+      const token = tokens[index]
+      const nextToken = tokens[index + 1]
+
+      if (this.isFunction(token) && Array.isArray(nextToken)) {
+        output.push({
+          name: token,
+          args: this.formatArgTokens(nextToken),
+        })
+
+        index += 2
+        continue
+      }
+
+      output.push(token)
+      index += 1
+    }
+
+    return output
   }
 
   getArgsObject(args) {
@@ -19,6 +106,12 @@ class Functions {
       const argument = argsArray[i]
 
       const matches = functionArgument.exec(argument)
+
+      if (!matches) {
+        throw new Error(
+          `Argument definition '${argument}' is invalid. Format 'name:type'`
+        )
+      }
 
       const [, name, type, defaultValueExpression] = matches
 
@@ -65,22 +158,79 @@ class Functions {
 
     const argsObject = this.getArgsObject(args)
 
+    const requiredArgs = argsObject.filter(arg => arg.defaultValue === null)
+
     return {
       name,
       args: argsObject,
+      requiredArgs: requiredArgs.length,
     }
   }
 
-  registerFunction(data) {
-    const { name, args, startLine, endLine } = data
+  validateArgs(name, args) {
+    const func = this.getFunction(name)
 
-    // TODO - Check if function already exists
-
-    this.functions[name] = {
-      args,
-      startLine,
-      endLine,
+    if (args.length < func.requiredArgs) {
+      throw new Error(
+        `Expected at least ${func.requiredArgs} arguments, got ${args.length}`
+      )
     }
+
+    if (args.length > func.args.length) {
+      throw new Error(
+        `Passed ${args.length} arguments, only ${func.args.length} defined`
+      )
+    }
+
+    const argValues = {}
+
+    for (let i = 0; i < func.args.length; i++) {
+      const { name, type, defaultValue } = func.args[i]
+      const argExpression = args[i]
+
+      if (!argExpression) {
+        if (!defaultValue) {
+          throw new Error(`Argument '${name}' is required but is undefined`)
+        }
+
+        argValues[name] = defaultValue
+        continue
+      }
+
+      const argResult = this.logic.getExpressionValue(argExpression)
+
+      if (argResult.type !== type) {
+        throw new Error(
+          `Argument '${argExpression}' is of type ${argResult.type}, expected type '${type}'`
+        )
+      }
+
+      argValues[name] = argResult
+    }
+
+    return argValues
+  }
+
+  getFunctionResult(token) {
+    const { name, args: argInfo } = token
+    const func = this.getFunction(name)
+
+    const args = this.validateArgs(name, argInfo)
+
+    this.logic.variables.setFunctionArgs(args)
+
+    this.logic.visibleScopes.push(func.innerScope)
+
+    const functionLines = this.logic.parser.lines[func.id].slice(
+      func.startLine,
+      func.endLine
+    )
+
+    const result = this.logic.parser.parseLines(functionLines, func)
+
+    this.logic.variables.clearFunctionArgs({})
+
+    return result
   }
 }
 

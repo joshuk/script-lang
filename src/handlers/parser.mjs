@@ -4,19 +4,27 @@ import { getError, getFirstDifferenceIndex } from '../helpers/errors.mjs'
 import Logic from './logic.mjs'
 import { getCharacterLengthAtStart } from '../helpers/string.mjs'
 import { getScope } from '../helpers/scope.mjs'
-import { LINE_TYPES } from '../constants.mjs'
+import { LINE_TYPES, TYPES } from '../constants.mjs'
+import { randomUUID } from 'crypto'
 
 class Parser {
-  constructor() {
-    this.programCounter = 0
-    this.lines = []
+  constructor({ variables = null } = {}) {
+    this.programCounter = {}
+    this.lines = {}
+    this.isErroring = false
 
     this.logic = new Logic(this)
+
+    if (variables !== null) {
+      this.logic.variables.variables = variables
+    }
   }
 
-  getNextLineTypeWithIndent(types, indent) {
-    for (let i = this.programCounter; i < this.lines.length; i++) {
-      const line = this.lines[i]
+  getNextLineTypeWithIndent(id, types, indent) {
+    const lines = this.lines[id]
+
+    for (let i = this.programCounter[id]; i < lines.length; i++) {
+      const line = lines[i]
       const indentation = getCharacterLengthAtStart(line)
       const lineType = getLineType(line)
 
@@ -30,18 +38,19 @@ class Parser {
     return null
   }
 
-  handleConditional(type, matches) {
-    const currentLine = this.lines[this.programCounter]
+  handleConditional(id, type, matches) {
+    const programCounter = this.programCounter[id]
+    const currentLine = this.lines[id][programCounter]
     const [, expression] = matches
 
     const currentIndentation = getCharacterLengthAtStart(currentLine)
 
     if (this.logic.expressionIsTrue(expression)) {
       this.logic.visibleScopes.push(
-        getScope(type, this.programCounter, currentIndentation)
+        getScope(id, type, programCounter, currentIndentation)
       )
 
-      return this.programCounter + 1
+      return programCounter + 1
     }
 
     const acceptedTypes = [LINE_TYPES.closingBracket]
@@ -51,6 +60,7 @@ class Parser {
     }
 
     const nextLineIndex = this.getNextLineTypeWithIndent(
+      id,
       acceptedTypes,
       currentIndentation
     )
@@ -59,18 +69,18 @@ class Parser {
       throw new Error('Closing bracket not found')
     }
 
-    const lineType = getLineType(this.lines[nextLineIndex])
+    const lineType = getLineType(this.lines[id][nextLineIndex])
 
     if (lineType.type === LINE_TYPES.else) {
       this.logic.visibleScopes.push(
-        getScope(LINE_TYPES.else, nextLineIndex, currentIndentation)
+        getScope(id, LINE_TYPES.else, nextLineIndex, currentIndentation)
       )
     }
 
     return nextLineIndex + 1
   }
 
-  handleElse() {
+  handleElse(id) {
     const currentScope = this.logic.getCurrentScope()
 
     if (currentScope.type !== LINE_TYPES.ifCondition) {
@@ -78,6 +88,7 @@ class Parser {
     }
 
     const closingBracketIndex = this.getNextLineTypeWithIndent(
+      id,
       LINE_TYPES.closingBracket,
       currentScope.indent
     )
@@ -91,8 +102,9 @@ class Parser {
     return closingBracketIndex + 1
   }
 
-  handleClosingBracket() {
-    const line = this.lines[this.programCounter]
+  handleClosingBracket(id) {
+    const programCounter = this.programCounter[id]
+    const line = this.lines[id][programCounter]
     const currentIndentation = getCharacterLengthAtStart(line)
     const currentScope = this.logic.getCurrentScope()
 
@@ -108,18 +120,20 @@ class Parser {
       case LINE_TYPES.whileCondition:
         return currentScope.line
       default:
-        return this.programCounter + 1
+        return programCounter + 1
     }
   }
 
-  handleFunction(matches) {
-    const line = this.lines[this.programCounter]
+  handleFunctionDeclaration(id, matches) {
+    const programCounter = this.programCounter[id]
+    const line = this.lines[id][programCounter]
     const [, name, args] = matches
 
     const functionInfo = this.logic.functions.getFunctionInfo(name, args)
     const currentIndentation = getCharacterLengthAtStart(line)
 
     const closingBracketIndex = this.getNextLineTypeWithIndent(
+      id,
       [LINE_TYPES.closingBracket],
       currentIndentation
     )
@@ -128,20 +142,47 @@ class Parser {
       throw new Error('Closing bracket not found')
     }
 
-    this.logic.functions.registerFunction({
-      ...functionInfo,
-      startLine: this.programCounter + 1,
-      endLine: closingBracketIndex,
-    })
+    const startLine = programCounter + 1
+
+    this.logic.functions.registerFunction(
+      id,
+      functionInfo,
+      startLine,
+      closingBracketIndex,
+      getScope(id, LINE_TYPES.functionDeclaration, startLine, 0)
+    )
 
     return closingBracketIndex + 1
   }
 
-  parseLine() {
-    const line = this.lines[this.programCounter]
+  getReturnValue(matches) {
+    const [, expression] = matches
+
+    const lastFunctionScopeIndex =
+      this.logic.visibleScopes.length -
+      [...this.logic.visibleScopes]
+        .reverse()
+        .findIndex(({ type }) => type === LINE_TYPES.functionDeclaration) -
+      1
+
+    this.logic.visibleScopes = this.logic.visibleScopes.slice(
+      0,
+      lastFunctionScopeIndex
+    )
+
+    if (!expression) {
+      return this.logic.getTokenValue(TYPES.null)
+    }
+
+    return this.logic.getExpressionValue(expression)
+  }
+
+  parseLine(id) {
+    const programCounter = this.programCounter[id]
+    const line = this.lines[id][programCounter]
 
     if (line.trim() === '') {
-      this.programCounter += 1
+      this.programCounter[id] += 1
 
       return
     }
@@ -165,52 +206,70 @@ class Parser {
       case LINE_TYPES.variableDeclaration:
         this.logic.variables.initVariable(matches)
 
-        this.programCounter += 1
+        this.programCounter[id] += 1
         break
       case LINE_TYPES.variableUpdate:
         this.logic.variables.updateVariable(matches)
 
-        this.programCounter += 1
+        this.programCounter[id] += 1
         break
       case LINE_TYPES.ifCondition:
       case LINE_TYPES.whileCondition:
-        this.programCounter = this.handleConditional(type, matches)
+        this.programCounter[id] = this.handleConditional(id, type, matches)
         break
       case LINE_TYPES.else:
-        this.programCounter = this.handleElse()
+        this.programCounter[id] = this.handleElse(id)
         break
       case LINE_TYPES.closingBracket:
-        this.programCounter = this.handleClosingBracket()
+        this.programCounter[id] = this.handleClosingBracket(id)
         break
-      case LINE_TYPES.function:
-        this.programCounter += this.handleFunction(matches)
+      case LINE_TYPES.functionDeclaration:
+        this.programCounter[id] = this.handleFunctionDeclaration(id, matches)
         break
+      case LINE_TYPES.return:
+        return this.getReturnValue(matches)
       case LINE_TYPES.comment:
-        this.programCounter += 1
+        this.programCounter[id] += 1
         break
     }
   }
 
-  parseText(text) {
-    this.lines = text.split('\n')
+  parseLines(lines, functionInfo = null) {
+    const id = randomUUID()
+    this.lines[id] = lines
+    this.programCounter[id] = 0
 
-    while (this.programCounter < this.lines.length) {
+    while (this.programCounter[id] < this.lines[id].length) {
       try {
-        this.parseLine()
+        const output = this.parseLine(id)
+
+        if (output) {
+          return output
+        }
       } catch (e) {
-        const line = this.programCounter
+        if (this.isErroring) {
+          return
+        }
+
+        const line =
+          (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
 
         console.log('')
         console.log(`Error on line ${line + 1} - ${e.message}`)
 
-        console.log(this.lines[line])
+        console.log(this.lines[id][this.programCounter[id]].trim())
         if (e.position) {
           console.log(`${Array(Number(e.position.column)).fill('-').join('')}^`)
         }
 
-        this.programCounter = this.lines.length
+        this.programCounter[id] = this.lines[id].length
+        this.isErroring = true
       }
     }
+  }
+
+  parseText(text) {
+    this.parseLines(text.split('\n'))
   }
 
   async parseFile(filename) {

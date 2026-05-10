@@ -1,5 +1,18 @@
-function hello(name:string = 'test') {
+function hello(name:string) {
   return "Hello " . name
 }
 
-const output = hello("Naomi")
+const output = hello('Naomi')
+
+function recursive(num:number) {
+  // const test2 = 123
+
+  if (num === 5) {
+    return num
+  }
+
+  return recursive(num + 1)
+}
+
+const test = recursive(0)
+

@@ -4,6 +4,7 @@ import {
   getUnescapedQuoteIndexes,
   isString,
 } from '../helpers/types/string.mjs'
+import { isVariableNameValid } from '../helpers/variables.mjs'
 
 class Strings {
   constructor(logic) {
@@ -120,6 +121,10 @@ class Strings {
       }
 
       if (!isString(token)) {
+        if (isVariableNameValid(token)) {
+          throw new Error(`Undefined variable '${token}'`)
+        }
+
         throw new Error(`Token '${token}' is not of type 'string'`)
       }
 
