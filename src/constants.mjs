@@ -17,6 +17,7 @@ export const LINE_TYPES = {
   whileCondition: 'whileCondition',
   functionDeclaration: 'functionDeclaration',
   return: 'return',
+  unknown: 'unknown',
 }
 
 export const GLOBAL_SCOPE = getScope(null, null, 0, 0)

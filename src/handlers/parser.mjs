@@ -6,6 +6,7 @@ import { getCharacterLengthAtStart } from '../helpers/string.mjs'
 import { getScope } from '../helpers/scope.mjs'
 import { LINE_TYPES, TYPES } from '../constants.mjs'
 import { randomUUID } from 'crypto'
+import { isFunction } from '../helpers/types/function.mjs'
 
 class Parser {
   constructor({ variables = null } = {}) {
@@ -148,14 +149,17 @@ class Parser {
       id,
       functionInfo,
       startLine,
-      closingBracketIndex,
-      getScope(id, LINE_TYPES.functionDeclaration, startLine, 0)
+      closingBracketIndex
     )
 
     return closingBracketIndex + 1
   }
 
-  getReturnValue(matches) {
+  getReturnValue(matches, functionInfo) {
+    if (!functionInfo) {
+      return null
+    }
+
     const [, expression] = matches
 
     const lastFunctionScopeIndex =
@@ -177,7 +181,19 @@ class Parser {
     return this.logic.getExpressionValue(expression)
   }
 
-  parseLine(id) {
+  checkForFunctions(line) {
+    const tokens = this.logic.getCleanedTokens(line)
+
+    if (tokens.length > 1 || !isFunction(tokens[0])) {
+      return false
+    }
+
+    this.logic.getTokenValue(tokens[0])
+
+    return true
+  }
+
+  parseLine(id, functionInfo) {
     const programCounter = this.programCounter[id]
     const line = this.lines[id][programCounter]
 
@@ -187,15 +203,9 @@ class Parser {
       return
     }
 
-    const result = getLineType(line)
+    const { type, matches } = getLineType(line)
 
-    if (!result) {
-      throw getError('Unknown Declaration', 0)
-    }
-
-    const { type, matches } = result
-
-    if (matches.input !== matches[0]) {
+    if (matches && matches.input !== matches[0]) {
       throw getError(
         'Invalid character',
         getFirstDifferenceIndex(matches.input, matches[0])
@@ -227,8 +237,15 @@ class Parser {
         this.programCounter[id] = this.handleFunctionDeclaration(id, matches)
         break
       case LINE_TYPES.return:
-        return this.getReturnValue(matches)
+        return this.getReturnValue(matches, functionInfo)
       case LINE_TYPES.comment:
+        this.programCounter[id] += 1
+        break
+      case LINE_TYPES.unknown:
+        if (!this.checkForFunctions(line.trim())) {
+          throw getError('Unknown Declaration', 0)
+        }
+
         this.programCounter[id] += 1
         break
     }
@@ -239,9 +256,20 @@ class Parser {
     this.lines[id] = lines
     this.programCounter[id] = 0
 
+    if (functionInfo) {
+      const functionScope = getScope(
+        id,
+        LINE_TYPES.functionDeclaration,
+        functionInfo.startLine,
+        0
+      )
+
+      this.logic.visibleScopes.push(functionScope)
+    }
+
     while (this.programCounter[id] < this.lines[id].length) {
       try {
-        const output = this.parseLine(id)
+        const output = this.parseLine(id, functionInfo)
 
         if (output) {
           return output
@@ -278,6 +306,7 @@ class Parser {
     this.parseText(contents)
 
     console.log('')
+    console.log(this.logic.functions.functions)
     console.log(this.logic.variables.variables)
   }
 }

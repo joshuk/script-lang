@@ -187,6 +187,11 @@ class Logic {
     return output
   }
 
+  getCleanedTokens(string) {
+    const tokens = this.getTokens(string)
+    return this.cleanTokens(tokens)
+  }
+
   evaluateTokens(tokens) {
     if (tokens.includes(this.strings.operator)) {
       const result = this.strings.getConcatenationResult(tokens)
@@ -219,18 +224,17 @@ class Logic {
   }
 
   getExpressionValue(expression) {
-    const tokens = this.getTokens(expression)
-    const cleanedTokens = this.cleanTokens(tokens)
+    const tokens = this.getCleanedTokens(expression)
 
-    if (cleanedTokens.length === 1) {
-      const tokenValue = this.getTokenValue(cleanedTokens[0])
+    if (tokens.length === 1) {
+      const tokenValue = this.getTokenValue(tokens[0])
 
       if (tokenValue) {
         return tokenValue
       }
     }
 
-    const result = this.evaluateTokens(cleanedTokens)
+    const result = this.evaluateTokens(tokens)
 
     return result
   }

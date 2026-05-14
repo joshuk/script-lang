@@ -1,11 +1,24 @@
+const variable = 'asdfsadf'
+const variable2 = variable . '2'
+
 function hello(name:string) {
   return "Hello " . name
 }
 
 const output = hello('Naomi')
 
+if (true) {
+  let test2 = 'test2'
+
+  function testFunction() {
+    test2 = 'test2test2' 
+  }
+
+  testFunction()
+}
+
 function recursive(num:number) {
-  // const test2 = 123
+  const test2 = 123 + num
 
   if (num === 5) {
     return num

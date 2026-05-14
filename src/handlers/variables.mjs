@@ -1,5 +1,6 @@
 import { TYPES } from '../constants.mjs'
 import { getError } from '../helpers/errors.mjs'
+import { getActiveScopeKey, getScopeString } from '../helpers/scope.mjs'
 import { isVariableNameValid } from '../helpers/variables.mjs'
 
 class Variables {
@@ -15,9 +16,21 @@ class Variables {
       return true
     }
 
-    const variable = this.variables[name]
+    const scopeKey = getActiveScopeKey(
+      this.logic.visibleScopes,
+      this.variables,
+      name
+    )
 
-    if (variable && this.logic.visibleScopes.includes(variable.scope)) {
+    if (scopeKey) {
+      return true
+    }
+
+    return false
+  }
+
+  isFunctionArg(name) {
+    if (this.functionArgs[name]) {
       return true
     }
 
@@ -33,15 +46,28 @@ class Variables {
       throw new Error(`Unknown variable '${name}'`)
     }
 
-    return this.variables[name]
+    const scopeKey = getActiveScopeKey(
+      this.logic.visibleScopes,
+      this.variables,
+      name
+    )
+
+    return this.variables[scopeKey][name]
   }
 
   registerVariable(defType, type, name, value) {
-    this.variables[name] = {
+    const currentScope = this.logic.getCurrentScope()
+    const scopeString = getScopeString(currentScope)
+
+    const variableObject = {
       isConst: defType === 'const',
       type,
       value,
-      scope: this.logic.getCurrentScope(),
+    }
+
+    this.variables[scopeString] = {
+      ...this.variables[scopeString],
+      [name]: variableObject,
     }
   }
 
@@ -50,8 +76,18 @@ class Variables {
       throw new Error(`Unknown variable '${name}'`)
     }
 
-    this.variables[name] = {
-      ...this.variables[name],
+    if (this.isFunctionArg(name)) {
+      throw new Error(`Function argument '${name}' cannot be reassigned`)
+    }
+
+    const scopeKey = getActiveScopeKey(
+      this.logic.visibleScopes,
+      this.variables,
+      name
+    )
+
+    this.variables[scopeKey][name] = {
+      ...this.variables[scopeKey][name],
       type,
       value,
     }
@@ -141,10 +177,6 @@ class Variables {
 
   setFunctionArgs(args) {
     this.functionArgs = args
-  }
-
-  clearFunctionArgs(args) {
-    this.functionArgs = {}
   }
 }
 

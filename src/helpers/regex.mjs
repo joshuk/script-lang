@@ -57,5 +57,8 @@ export const getLineType = line => {
     }
   }
 
-  return false
+  return {
+    type: LINE_TYPES.unknown,
+    matches: null,
+  }
 }

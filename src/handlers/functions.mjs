@@ -1,5 +1,6 @@
-import { TYPES } from '../constants.mjs'
+import { LINE_TYPES, TYPES } from '../constants.mjs'
 import { functionArgument } from '../helpers/regex.mjs'
+import { getActiveScopeKey, getScopeString } from '../helpers/scope.mjs'
 import { isVariableNameValid } from '../helpers/variables.mjs'
 
 class Functions {
@@ -12,9 +13,13 @@ class Functions {
   }
 
   isFunction(name) {
-    const func = this.functions[name]
+    const scopeKey = getActiveScopeKey(
+      this.logic.visibleScopes,
+      this.functions,
+      name
+    )
 
-    if (func && this.logic.visibleScopes.includes(func.scope)) {
+    if (scopeKey) {
       return true
     }
 
@@ -26,27 +31,39 @@ class Functions {
       throw new Error(`Undefined function '${name}'`)
     }
 
-    return this.functions[name]
+    const scopeKey = getActiveScopeKey(
+      this.logic.visibleScopes,
+      this.functions,
+      name
+    )
+
+    return this.functions[scopeKey][name]
   }
 
-  registerFunction(id, functionInfo, startLine, endLine, innerScope) {
+  registerFunction(id, functionInfo, startLine, endLine) {
     const { name } = functionInfo
 
     if (this.logic.variables.isVariable(name)) {
       throw new Error(`'${name}' is already defined as a variable`)
     }
 
+    const currentScope = this.logic.getCurrentScope()
+    const scopeString = getScopeString(currentScope)
+
     if (this.isFunction(name)) {
       throw new Error(`Function '${name}' is already defined`)
     }
 
-    this.functions[name] = {
+    const functionObject = {
       id,
       ...functionInfo,
       startLine,
       endLine,
-      scope: this.logic.getCurrentScope(),
-      innerScope,
+    }
+
+    this.functions[scopeString] = {
+      ...this.functions[scopeString],
+      [name]: functionObject,
     }
   }
 
@@ -66,7 +83,9 @@ class Functions {
       stack.push(token)
     }
 
-    output.push(stack)
+    if (stack.length > 0) {
+      output.push(stack)
+    }
 
     return output
   }
@@ -97,7 +116,10 @@ class Functions {
   }
 
   getArgsObject(args) {
-    const argsArray = args.split(',').map(arg => arg.trim())
+    const argsArray = args
+      .split(',')
+      .map(arg => arg.trim())
+      .filter(arg => arg)
     const allTypes = Object.keys(TYPES)
 
     const output = []
@@ -219,8 +241,6 @@ class Functions {
 
     this.logic.variables.setFunctionArgs(args)
 
-    this.logic.visibleScopes.push(func.innerScope)
-
     const functionLines = this.logic.parser.lines[func.id].slice(
       func.startLine,
       func.endLine
@@ -228,7 +248,13 @@ class Functions {
 
     const result = this.logic.parser.parseLines(functionLines, func)
 
-    this.logic.variables.clearFunctionArgs({})
+    this.logic.visibleScopes = this.logic.visibleScopes.filter(
+      scope =>
+        scope.type !== LINE_TYPES.functionDeclaration ||
+        scope.line !== func.startLine
+    )
+
+    this.logic.variables.setFunctionArgs({})
 
     return result
   }
