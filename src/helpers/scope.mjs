@@ -1,16 +1,17 @@
 import { LINE_TYPES } from '../constants.mjs'
 
-export const getScope = (id, type, line, indent) => {
+export const getScope = (id, type, line, indent, loopCount = 0) => {
   return {
     id,
     type,
     line,
     indent,
+    loopCount,
   }
 }
 
-export const getScopeString = ({ id, type, line, indent }) => {
-  return `${id}.${type}.${line}.${indent}`
+export const getScopeString = ({ id, type, line, indent, loopCount }) => {
+  return `${id}.${type}.${line}.${indent}.${loopCount}`
 }
 
 export const getActiveScopeKey = (

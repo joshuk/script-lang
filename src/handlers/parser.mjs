@@ -7,6 +7,7 @@ import { getScope } from '../helpers/scope.mjs'
 import { LINE_TYPES, TYPES } from '../constants.mjs'
 import { randomUUID } from 'crypto'
 import { isFunction } from '../helpers/types/function.mjs'
+import { last } from '../helpers/array.mjs'
 
 class Parser {
   constructor({ variables = null } = {}) {
@@ -15,6 +16,7 @@ class Parser {
     this.isErroring = false
 
     this.logic = new Logic(this)
+    this.loopCount = null
 
     if (variables !== null) {
       this.logic.variables.variables = variables
@@ -47,11 +49,19 @@ class Parser {
     const currentIndentation = getCharacterLengthAtStart(currentLine)
 
     if (this.logic.expressionIsTrue(expression)) {
+      if (type === LINE_TYPES.whileCondition) {
+        this.loopCount = this.loopCount === null ? 0 : this.loopCount + 1
+      }
+
       this.logic.visibleScopes.push(
-        getScope(id, type, programCounter, currentIndentation)
+        getScope(id, type, programCounter, currentIndentation, this.loopCount)
       )
 
       return programCounter + 1
+    }
+
+    if (this.loopCount !== null) {
+      this.loopCount = null
     }
 
     const acceptedTypes = [LINE_TYPES.closingBracket]
