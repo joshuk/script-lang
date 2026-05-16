@@ -1,6 +1,6 @@
 import { LINE_TYPES } from '../constants.mjs'
 
-export const getScope = (id, type, line, indent, loopCount = 0) => {
+export const getScope = (id, type, line, indent, loopCount = null) => {
   return {
     id,
     type,
