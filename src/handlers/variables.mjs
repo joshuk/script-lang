@@ -1,4 +1,4 @@
-import { TYPES } from '../constants.mjs'
+import { GLOBAL_SCOPE, TYPES } from '../constants.mjs'
 import { getError } from '../helpers/errors.mjs'
 import { getActiveScopeKey, getScopeString } from '../helpers/scope.mjs'
 import { isVariableNameValid } from '../helpers/variables.mjs'
@@ -91,6 +91,12 @@ class Variables {
       type,
       value,
     }
+
+    const onChange = this.variables[scopeKey][name].onChange
+
+    if (onChange && typeof onChange === 'function') {
+      onChange(value)
+    }
   }
 
   initVariable(matches) {
@@ -177,6 +183,12 @@ class Variables {
 
   setFunctionArgs(args) {
     this.functionArgs = args
+  }
+
+  setVariables(variables) {
+    const scopeString = getScopeString(GLOBAL_SCOPE)
+
+    this.variables[scopeString] = variables
   }
 }
 

@@ -1,3 +1,4 @@
+import { TYPES } from './src/constants.mjs'
 import Parser from './src/handlers/parser.mjs'
 ;(() => {
   const args = process.argv.slice(2)
@@ -9,7 +10,40 @@ import Parser from './src/handlers/parser.mjs'
 
   const startTime = performance.now()
 
-  const parser = new Parser()
+  const parser = new Parser({
+    variables: {
+      _x: {
+        isConst: false,
+        type: TYPES.number,
+        value: 0,
+        onChange: newValue => {
+          console.log('New _x value', newValue)
+        },
+      },
+    },
+    functions: {
+      pow: {
+        name: 'pow',
+        args: [
+          {
+            name: 'num',
+            type: TYPES.number,
+            defaultValue: null,
+          },
+          {
+            name: 'power',
+            type: TYPES.number,
+            defaultValue: null,
+          },
+        ],
+        requiredArgs: 1,
+        getResult: (num, power) => {
+          return Math.pow(num, power)
+        },
+        resultType: TYPES.number,
+      },
+    },
+  })
 
   parser.parseFile(`scripts/${args[1]}`)
 

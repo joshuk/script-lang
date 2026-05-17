@@ -7,19 +7,21 @@ import { getScope } from '../helpers/scope.mjs'
 import { LINE_TYPES, TYPES } from '../constants.mjs'
 import { randomUUID } from 'crypto'
 import { isFunction } from '../helpers/types/function.mjs'
-import { last } from '../helpers/array.mjs'
 
 class Parser {
-  constructor({ variables = null } = {}) {
+  constructor({ variables = null, functions = null } = {}) {
     this.programCounter = {}
     this.lines = {}
     this.isErroring = false
 
     this.logic = new Logic(this)
-    this.loopCount = null
 
-    if (variables !== null) {
-      this.logic.variables.variables = variables
+    if (variables) {
+      this.logic.variables.setVariables(variables)
+    }
+
+    if (functions) {
+      this.logic.functions.setFunctions(functions)
     }
   }
 
@@ -50,18 +52,25 @@ class Parser {
 
     if (this.logic.expressionIsTrue(expression)) {
       if (type === LINE_TYPES.whileCondition) {
-        this.loopCount = this.loopCount === null ? 0 : this.loopCount + 1
+        this.logic.loopCount =
+          this.logic.loopCount === null ? 0 : this.logic.loopCount + 1
       }
 
       this.logic.visibleScopes.push(
-        getScope(id, type, programCounter, currentIndentation, this.loopCount)
+        getScope(
+          id,
+          type,
+          programCounter,
+          currentIndentation,
+          this.logic.loopCount
+        )
       )
 
       return programCounter + 1
     }
 
-    if (this.loopCount !== null) {
-      this.loopCount = null
+    if (this.logic.loopCount !== null) {
+      this.logic.loopCount = null
     }
 
     const acceptedTypes = [LINE_TYPES.closingBracket]
@@ -278,31 +287,31 @@ class Parser {
     }
 
     while (this.programCounter[id] < this.lines[id].length) {
-      try {
-        const output = this.parseLine(id, functionInfo)
+      // try {
+      const output = this.parseLine(id, functionInfo)
 
-        if (output) {
-          return output
-        }
-      } catch (e) {
-        if (this.isErroring) {
-          return
-        }
-
-        const line =
-          (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
-
-        console.log('')
-        console.log(`Error on line ${line + 1} - ${e.message}`)
-
-        console.log(this.lines[id][this.programCounter[id]].trim())
-        if (e.position) {
-          console.log(`${Array(Number(e.position.column)).fill('-').join('')}^`)
-        }
-
-        this.programCounter[id] = this.lines[id].length
-        this.isErroring = true
+      if (output) {
+        return output
       }
+      // } catch (e) {
+      //   if (this.isErroring) {
+      //     return
+      //   }
+
+      //   const line =
+      //     (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
+
+      //   console.log('')
+      //   console.log(`Error on line ${line + 1} - ${e.message}`)
+
+      //   console.log(this.lines[id][this.programCounter[id]].trim())
+      //   if (e.position) {
+      //     console.log(`${Array(Number(e.position.column)).fill('-').join('')}^`)
+      //   }
+
+      //   this.programCounter[id] = this.lines[id].length
+      //   this.isErroring = true
+      // }
     }
   }
 

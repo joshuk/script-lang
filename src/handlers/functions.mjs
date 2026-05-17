@@ -1,4 +1,4 @@
-import { LINE_TYPES, TYPES } from '../constants.mjs'
+import { GLOBAL_SCOPE, LINE_TYPES, TYPES } from '../constants.mjs'
 import { functionArgument } from '../helpers/regex.mjs'
 import { getActiveScopeKey, getScopeString } from '../helpers/scope.mjs'
 import { isVariableNameValid } from '../helpers/variables.mjs'
@@ -239,6 +239,19 @@ class Functions {
 
     const args = this.validateArgs(name, argInfo)
 
+    const getResult = func.getResult
+
+    if (getResult && typeof getResult === 'function') {
+      const resultArgs = Object.values(args).map(arg => arg.value)
+
+      const result = getResult(...resultArgs)
+
+      return {
+        type: func.resultType,
+        value: result,
+      }
+    }
+
     this.logic.variables.setFunctionArgs(args)
 
     const functionLines = this.logic.parser.lines[func.id].slice(
@@ -257,6 +270,12 @@ class Functions {
     this.logic.variables.setFunctionArgs({})
 
     return result
+  }
+
+  setFunctions(functions) {
+    const scopeString = getScopeString(GLOBAL_SCOPE)
+
+    this.functions[scopeString] = functions
   }
 }
 

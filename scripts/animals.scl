@@ -28,6 +28,7 @@ while (number < noiseCount) {
   output .= noise . endCharacter
 
   number += 1
+  _x += number
 }
 
 output .= '"'

@@ -11,25 +11,19 @@ class Arithmetic {
   }
 
   getTokenResult(token) {
-    if (isNumber(token)) {
-      return Number(token)
-    }
+    const isArray = Array.isArray(token)
 
-    if (Array.isArray(token)) {
+    if (isArray && token.length > 1) {
       return this.calculateArithmetic(token)
     }
 
-    if (this.logic.variables.isVariable(token)) {
-      const variable = this.logic.variables.getVariable(token)
+    const result = this.logic.getTokenValue(isArray ? token[0] : token)
 
-      if (variable.type !== TYPES.number) {
-        throw new Error(`Variable '${token}' is not of type 'number'`)
-      }
-
-      return variable.value
+    if (result.type !== TYPES.number) {
+      throw new Error(`Token '${token}' is not of type number`)
     }
 
-    throw new Error(`Token '${token}' is not of type number`)
+    return Number(result.value)
   }
 
   getArithmeticResult(tokens, operator) {
@@ -105,13 +99,11 @@ class Arithmetic {
   calculateArithmetic(tokens) {
     let calculatedTokens = [...tokens]
 
-    // TODO - Implement Pow and Sqrt
-
     for (const operator of this.operators) {
       calculatedTokens = this.getArithmeticResult(calculatedTokens, operator)
     }
 
-    return calculatedTokens[0]
+    return Number(calculatedTokens[0])
   }
 
   combineDecimals(tokens) {

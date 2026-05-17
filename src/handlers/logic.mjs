@@ -28,6 +28,7 @@ class Logic {
     ]
 
     this.visibleScopes = [GLOBAL_SCOPE]
+    this.loopCount = null
   }
 
   getCurrentScope() {
