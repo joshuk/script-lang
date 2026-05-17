@@ -1,6 +1,7 @@
 import { GLOBAL_SCOPE, LINE_TYPES, TYPES } from '../constants.mjs'
 import { functionArgument } from '../helpers/regex.mjs'
 import { getActiveScopeKey, getScopeString } from '../helpers/scope.mjs'
+import { getTokenType } from '../helpers/types/types.mjs'
 import { isVariableNameValid } from '../helpers/variables.mjs'
 
 class Functions {
@@ -247,7 +248,7 @@ class Functions {
       const result = getResult(...resultArgs)
 
       return {
-        type: func.resultType,
+        type: getTokenType(result),
         value: result,
       }
     }
@@ -275,7 +276,19 @@ class Functions {
   setFunctions(functions) {
     const scopeString = getScopeString(GLOBAL_SCOPE)
 
-    this.functions[scopeString] = functions
+    const formattedFunctions = {}
+
+    for (const [key, value] of Object.entries(functions)) {
+      const requiredArgs = value.args.filter(arg => arg.defaultValue === null)
+
+      formattedFunctions[key] = {
+        ...value,
+        name: key,
+        requiredArgs: requiredArgs.length,
+      }
+    }
+
+    this.functions[scopeString] = formattedFunctions
   }
 }
 

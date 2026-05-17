@@ -23,7 +23,6 @@ import Parser from './src/handlers/parser.mjs'
     },
     functions: {
       pow: {
-        name: 'pow',
         args: [
           {
             name: 'num',
@@ -36,11 +35,9 @@ import Parser from './src/handlers/parser.mjs'
             defaultValue: null,
           },
         ],
-        requiredArgs: 1,
         getResult: (num, power) => {
           return Math.pow(num, power)
         },
-        resultType: TYPES.number,
       },
     },
   })

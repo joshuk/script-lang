@@ -1,7 +1,7 @@
 import { getAllIndexesOfStringInString } from '../string.mjs'
 
 export const isString = (string, throwError = true) => {
-  if (string.length < 2) {
+  if (typeof string !== 'string' || string.length < 2) {
     return false
   }
 
