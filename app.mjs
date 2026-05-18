@@ -1,12 +1,15 @@
+import { readFile } from 'fs/promises'
 import { TYPES } from './src/constants.mjs'
 import Parser from './src/handlers/parser.mjs'
-;(() => {
+;(async () => {
   const args = process.argv.slice(2)
 
   if (args[0] !== '-f' || !args[1]) {
     console.log('Argument -f must be passed with a valid filename')
     return
   }
+
+  const contents = await readFile(`scripts/${args[1]}`, 'utf-8')
 
   const startTime = performance.now()
 
@@ -42,7 +45,9 @@ import Parser from './src/handlers/parser.mjs'
     },
   })
 
-  parser.parseFile(`scripts/${args[1]}`)
+  parser.parseText(contents)
+
+  parser.dumpVars()
 
   console.log(`Execution time: ${performance.now() - startTime}ms`)
 })()

@@ -1,4 +1,3 @@
-import { readFile } from 'fs/promises'
 import { getLineType } from '../helpers/regex.mjs'
 import { getError, getFirstDifferenceIndex } from '../helpers/errors.mjs'
 import Logic from './logic.mjs'
@@ -287,31 +286,31 @@ class Parser {
     }
 
     while (this.programCounter[id] < this.lines[id].length) {
-      // try {
-      const output = this.parseLine(id, functionInfo)
+      try {
+        const output = this.parseLine(id, functionInfo)
 
-      if (output) {
-        return output
+        if (output) {
+          return output
+        }
+      } catch (e) {
+        if (this.isErroring) {
+          return
+        }
+
+        const line =
+          (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
+
+        console.log('')
+        console.log(`Error on line ${line + 1} - ${e.message}`)
+
+        console.log(this.lines[id][this.programCounter[id]].trim())
+        if (e.position) {
+          console.log(`${Array(Number(e.position.column)).fill('-').join('')}^`)
+        }
+
+        this.programCounter[id] = this.lines[id].length
+        this.isErroring = true
       }
-      // } catch (e) {
-      //   if (this.isErroring) {
-      //     return
-      //   }
-
-      //   const line =
-      //     (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
-
-      //   console.log('')
-      //   console.log(`Error on line ${line + 1} - ${e.message}`)
-
-      //   console.log(this.lines[id][this.programCounter[id]].trim())
-      //   if (e.position) {
-      //     console.log(`${Array(Number(e.position.column)).fill('-').join('')}^`)
-      //   }
-
-      //   this.programCounter[id] = this.lines[id].length
-      //   this.isErroring = true
-      // }
     }
   }
 
@@ -319,12 +318,7 @@ class Parser {
     this.parseLines(text.split('\n'))
   }
 
-  async parseFile(filename) {
-    const contents = await readFile(filename, 'utf-8')
-
-    this.parseText(contents)
-
-    console.log('')
+  dumpVars() {
     console.log(this.logic.functions.functions)
     console.log(this.logic.variables.variables)
   }
