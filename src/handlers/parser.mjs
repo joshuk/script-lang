@@ -4,7 +4,6 @@ import Logic from './logic.mjs'
 import { getCharacterLengthAtStart } from '../helpers/string.mjs'
 import { getScope } from '../helpers/scope.mjs'
 import { LINE_TYPES, TYPES } from '../constants.mjs'
-import { randomUUID } from 'crypto'
 import { isFunction } from '../helpers/types/function.mjs'
 
 class Parser {
@@ -270,7 +269,7 @@ class Parser {
   }
 
   parseLines(lines, functionInfo = null) {
-    const id = randomUUID()
+    const id = crypto.randomUUID()
     this.lines[id] = lines
     this.programCounter[id] = 0
 
