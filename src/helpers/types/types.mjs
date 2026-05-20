@@ -8,12 +8,12 @@ export const getTokenType = token => {
     return TYPES.string
   }
 
-  if (isNumber(token)) {
-    return TYPES.number
-  }
-
   if (isBoolean(token)) {
     return TYPES.boolean
+  }
+
+  if (isNumber(token)) {
+    return TYPES.number
   }
 
   if (token === 'null') {

@@ -1,7 +1,7 @@
 export const isBoolean = boolean => {
-  return ['true', 'false'].includes(boolean)
+  return ['true', 'false'].includes(String(boolean))
 }
 
 export const getBooleanValue = boolean => {
-  return boolean === 'true'
+  return String(boolean) === 'true'
 }
