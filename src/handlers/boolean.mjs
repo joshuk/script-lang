@@ -41,7 +41,11 @@ class Boolean {
     let stack = []
 
     for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i].trim()
+      let token = tokens[i]
+
+      if (typeof token === 'string') {
+        token = token.trim()
+      }
 
       if (['&&', '||'].includes(token)) {
         output.push(stack)

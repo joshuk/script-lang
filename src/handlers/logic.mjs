@@ -170,12 +170,12 @@ class Logic {
     output = this.arithmetic.combineDecimals(output)
     output = this.arithmetic.combineNegativeNumbers(output)
 
+    output = this.functions.formatFunctionTokens(output)
+
     output = this.strings.combineStrings(output)
 
     output = this.boolean.combineOperators(output)
     output = this.boolean.containBooleanEquations(output)
-
-    output = this.functions.formatFunctionTokens(output)
 
     output = output.map(token =>
       typeof token === 'string' ? token.trim() : token

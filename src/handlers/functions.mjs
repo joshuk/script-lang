@@ -245,7 +245,7 @@ class Functions {
     if (getResult && typeof getResult === 'function') {
       const resultArgs = Object.values(args).map(arg => arg.value)
 
-      const result = getResult(...resultArgs)
+      let result = getResult(...resultArgs)
 
       return {
         type: getTokenType(result),
