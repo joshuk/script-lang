@@ -20,7 +20,7 @@ import Parser from './src/handlers/parser.mjs'
         type: TYPES.number,
         value: 0,
         onChange: newValue => {
-          console.log('New _x value', newValue)
+          // console.log('New _x value', newValue)
         },
       },
     },
@@ -47,7 +47,7 @@ import Parser from './src/handlers/parser.mjs'
 
   parser.parseText(contents)
 
-  parser.dumpVars()
-
   console.log(`Execution time: ${performance.now() - startTime}ms`)
+
+  parser.dumpVars()
 })()
