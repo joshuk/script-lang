@@ -47,7 +47,9 @@ import Parser from './src/handlers/parser.mjs'
 
   parser.parseText(contents)
 
-  console.log(`Execution time: ${performance.now() - startTime}ms`)
+  const perfTime = performance.now() - startTime
+
+  console.log(`Execution time: ${perfTime}ms`)
 
   parser.dumpVars()
 })()

@@ -1,91 +1,109 @@
-<button>press me</button>
-<p class="output"></p>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tester</title>
+  </head>
+  <body>
+    <button>Run Script</button>
+    <p class="output"></p>
 
-<script type="module">
-  import { TYPES } from './src/constants.mjs'
-  import Parser from './src/handlers/parser.mjs'
+    <br /><br />
 
-  const button = document.querySelector('button')
-  const output = document.querySelector('.output')
+    <label for="input">Input</label><br />
+    <textarea id="input" rows="15" cols="64">
+let animal = 'dog'
 
-  const contents = `
-  let animal = 'dog'
+let noise = null
 
-  let noise = null
+if (animal == 'cow') {
+  noise = 'moo'
+}
 
-  if (animal == 'cow') {
-    noise = 'moo'
+if (animal == 'dog') {
+  noise = 'woof'
+}
+
+const noiseCount = 3
+
+let output = 'The ' . animal . ' says "'
+
+let number = 0
+
+while (number < noiseCount) {
+  let endCharacter = null
+
+  if (number != (noiseCount - 1)) {
+    endCharacter = ' '
+  } else {
+    endCharacter = '!'
   }
 
-  if (animal == 'dog') {
-    noise = 'woof'
-  }
+  output .= noise . endCharacter
 
-  const noiseCount = 3
+  number += 1
+  _x += number
+}
 
-  let output = 'The ' . animal . ' says "'
+output .= '"'
+    </textarea>
 
-  let number = 0
+    <script type="module">
+      import { TYPES } from './src/constants.mjs'
+      import Parser from './src/handlers/parser.mjs'
 
-  while (number < noiseCount) {
-    let endCharacter = null
+      const button = document.querySelector('button')
+      const input = document.querySelector('#input')
+      const output = document.querySelector('.output')
 
-    if (number != (noiseCount - 1)) {
-      endCharacter = ' '
-    } else {
-      endCharacter = '!'
-    }
+      button.addEventListener('click', () => {
+        const contents = input.value
 
-    output .= noise . endCharacter
+        const startTime = performance.now()
 
-    number += 1
-    _x += number
-  }
-
-  output .= '"'
-  `
-
-  button.addEventListener('click', () => {
-    const startTime = performance.now()
-
-    const parser = new Parser({
-      variables: {
-        _x: {
-          isConst: false,
-          type: TYPES.number,
-          value: 0,
-          onChange: newValue => {
-            // console.log('New _x value', newValue)
-          },
-        },
-      },
-      functions: {
-        pow: {
-          args: [
-            {
-              name: 'num',
+        const parser = new Parser({
+          variables: {
+            _x: {
+              isConst: false,
               type: TYPES.number,
-              defaultValue: null,
+              value: 0,
+              onChange: newValue => {
+                // console.log('New _x value', newValue)
+              },
             },
-            {
-              name: 'power',
-              type: TYPES.number,
-              defaultValue: null,
-            },
-          ],
-          getResult: (num, power) => {
-            return Math.pow(num, power)
           },
-        },
-      },
-    })
+          functions: {
+            pow: {
+              args: [
+                {
+                  name: 'num',
+                  type: TYPES.number,
+                  defaultValue: null,
+                },
+                {
+                  name: 'power',
+                  type: TYPES.number,
+                  defaultValue: null,
+                },
+              ],
+              getResult: (num, power) => {
+                return Math.pow(num, power)
+              },
+            },
+          },
+        })
 
-    parser.parseText(contents)
+        console.clear()
 
-    const perfTime = performance.now() - startTime
+        parser.parseText(contents)
 
-    output.innerText = `Execution time: ${perfTime}ms`
+        const perfTime = performance.now() - startTime
 
-    parser.dumpVars()
-  })
-</script>
+        output.innerText = `Execution time: ${perfTime}ms`
+
+        parser.dumpVars()
+      })
+    </script>
+  </body>
+</html>

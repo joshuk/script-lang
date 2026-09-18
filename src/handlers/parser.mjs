@@ -10,6 +10,7 @@ class Parser {
   constructor({ variables = null, functions = null } = {}) {
     this.programCounter = {}
     this.lines = {}
+    this.lineTypeCache = {}
     this.isErroring = false
 
     this.logic = new Logic(this)
@@ -212,6 +213,7 @@ class Parser {
 
   parseLine(id, functionInfo) {
     const programCounter = this.programCounter[id]
+    const lineIndex = (functionInfo?.startLine || 0) + this.programCounter[id]
     const line = this.lines[id][programCounter]
 
     if (line.trim() === '') {
@@ -220,7 +222,16 @@ class Parser {
       return
     }
 
-    const { type, matches } = getLineType(line)
+    let lineType = null
+
+    if (this.lineTypeCache[lineIndex]) {
+      lineType = this.lineTypeCache[lineIndex]
+    } else {
+      lineType = getLineType(line)
+      this.lineTypeCache[lineIndex] = lineType
+    }
+
+    const { type, matches } = lineType
 
     if (matches && matches.input !== matches[0]) {
       throw getError(
@@ -318,8 +329,8 @@ class Parser {
   }
 
   dumpVars() {
-    console.log(this.logic.functions.functions)
-    console.log(this.logic.variables.variables)
+    console.log('Functions:', this.logic.functions.functions)
+    console.log('Variables:', this.logic.variables.variables)
   }
 }
 

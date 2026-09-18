@@ -100,6 +100,10 @@ class Arithmetic {
     let calculatedTokens = [...tokens]
 
     for (const operator of this.operators) {
+      if (!calculatedTokens.includes(operator)) {
+        continue
+      }
+
       calculatedTokens = this.getArithmeticResult(calculatedTokens, operator)
     }
 

@@ -7,6 +7,12 @@ const lineTypes = {
   [LINE_TYPES.comment]: {
     regex: new RegExp(`\/\/.*`),
   },
+  [LINE_TYPES.closingBracket]: {
+    regex: new RegExp('^}$'),
+  },
+  [LINE_TYPES.else]: {
+    regex: new RegExp(`^}${whitespaceChar}*else${whitespaceChar}*{$`),
+  },
   [LINE_TYPES.variableDeclaration]: {
     regex: new RegExp(
       `^(const|let)(?:${whitespaceChar}+([${variableName}]+)(?:${whitespaceChar}*=${whitespaceChar}*(.+))*)$`
@@ -19,12 +25,6 @@ const lineTypes = {
   },
   [LINE_TYPES.ifCondition]: {
     regex: new RegExp(`^if${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{$`),
-  },
-  [LINE_TYPES.closingBracket]: {
-    regex: new RegExp('^}$'),
-  },
-  [LINE_TYPES.else]: {
-    regex: new RegExp(`^}${whitespaceChar}*else${whitespaceChar}*{$`),
   },
   [LINE_TYPES.whileCondition]: {
     regex: new RegExp(`^while${whitespaceChar}*\\((.*)\\)${whitespaceChar}*{$`),
