@@ -1,10 +1,9 @@
-export const isFunction = token => {
-  const keys = JSON.stringify(Object.keys(token))
-  const expectedKeys = JSON.stringify(['name', 'args'])
+import { TYPES } from '../../constants.mjs'
 
-  if (typeof token === 'object' && keys === expectedKeys) {
-    return true
+export const isFunction = token => {
+  if (typeof token !== 'object' || token?.type !== TYPES.function) {
+    return false
   }
 
-  return false
+  return true
 }

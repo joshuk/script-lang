@@ -1,0 +1,91 @@
+<button>press me</button>
+<p class="output"></p>
+
+<script type="module">
+  import { TYPES } from './src/constants.mjs'
+  import Parser from './src/handlers/parser.mjs'
+
+  const button = document.querySelector('button')
+  const output = document.querySelector('.output')
+
+  const contents = `
+  let animal = 'dog'
+
+  let noise = null
+
+  if (animal == 'cow') {
+    noise = 'moo'
+  }
+
+  if (animal == 'dog') {
+    noise = 'woof'
+  }
+
+  const noiseCount = 3
+
+  let output = 'The ' . animal . ' says "'
+
+  let number = 0
+
+  while (number < noiseCount) {
+    let endCharacter = null
+
+    if (number != (noiseCount - 1)) {
+      endCharacter = ' '
+    } else {
+      endCharacter = '!'
+    }
+
+    output .= noise . endCharacter
+
+    number += 1
+    _x += number
+  }
+
+  output .= '"'
+  `
+
+  button.addEventListener('click', () => {
+    const startTime = performance.now()
+
+    const parser = new Parser({
+      variables: {
+        _x: {
+          isConst: false,
+          type: TYPES.number,
+          value: 0,
+          onChange: newValue => {
+            // console.log('New _x value', newValue)
+          },
+        },
+      },
+      functions: {
+        pow: {
+          args: [
+            {
+              name: 'num',
+              type: TYPES.number,
+              defaultValue: null,
+            },
+            {
+              name: 'power',
+              type: TYPES.number,
+              defaultValue: null,
+            },
+          ],
+          getResult: (num, power) => {
+            return Math.pow(num, power)
+          },
+        },
+      },
+    })
+
+    parser.parseText(contents)
+
+    const perfTime = performance.now() - startTime
+
+    output.innerText = `Execution time: ${perfTime}ms`
+
+    parser.dumpVars()
+  })
+</script>

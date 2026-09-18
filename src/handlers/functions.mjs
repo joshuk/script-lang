@@ -101,6 +101,7 @@ class Functions {
 
       if (this.isFunction(token) && Array.isArray(nextToken)) {
         output.push({
+          type: TYPES.function,
           name: token,
           args: this.formatArgTokens(nextToken),
         })

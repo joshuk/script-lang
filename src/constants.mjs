@@ -5,6 +5,7 @@ export const TYPES = {
   boolean: 'boolean',
   string: 'string',
   null: 'null',
+  function: 'function',
 }
 
 export const LINE_TYPES = {
