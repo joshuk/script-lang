@@ -310,16 +310,16 @@ class Parser {
         const line =
           (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
 
-        console.log('')
-        console.log(`Error on line ${line + 1} - ${e.message}`)
+        let error = `Error on line ${line + 1} - ${e.message}\n${this.lines[id][this.programCounter[id]].trim()}`
 
-        console.log(this.lines[id][this.programCounter[id]].trim())
         if (e.position) {
-          console.log(`${Array(Number(e.position.column)).fill('-').join('')}^`)
+          error += `\n${Array(Number(e.position.column)).fill('-').join('')}^`
         }
 
         this.programCounter[id] = this.lines[id].length
         this.isErroring = true
+
+        throw new Error(error)
       }
     }
   }
