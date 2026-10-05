@@ -40,7 +40,7 @@ const lineTypes = {
 }
 
 export const functionArgument = new RegExp(
-  `([${variableName}]*):([\\w]*)(?:${whitespaceChar}*=${whitespaceChar}*(.*)){0,1}`
+  `([${variableName}]*):([\\w|]*)(?:${whitespaceChar}*=${whitespaceChar}*(.*)){0,1}`
 )
 
 export const getLineType = line => {

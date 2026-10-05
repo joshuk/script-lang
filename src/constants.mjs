@@ -6,6 +6,7 @@ export const TYPES = {
   string: 'string',
   null: 'null',
   function: 'function',
+  any: 'any',
 }
 
 export const LINE_TYPES = {

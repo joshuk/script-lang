@@ -137,7 +137,8 @@ class Functions {
         )
       }
 
-      const [, name, type, defaultValueExpression] = matches
+      const [, name, rawType, defaultValueExpression] = matches
+      const types = rawType.split('|')
 
       const isNameValid = isVariableNameValid(name)
 
@@ -145,7 +146,9 @@ class Functions {
         throw new Error(`Argument name '${name}' is invalid`)
       }
 
-      if (!allTypes.includes(type)) {
+      const invalidTypes = types.find(type => !allTypes.includes(type))
+
+      if (invalidTypes) {
         throw new Error(
           `Argument '${name}' must be of type ${allTypes.map(type => `'${type}'`).join(', ')}`
         )
@@ -156,16 +159,16 @@ class Functions {
       if (defaultValueExpression) {
         defaultValue = this.logic.getExpressionValue(defaultValueExpression)
 
-        if (defaultValue.type !== type) {
+        if (types.includes(defaultValue.type)) {
           throw new Error(
-            `Default value '${defaultValueExpression}' is not of type '${type}'`
+            `Default value '${defaultValueExpression}' is not of type '${rawType}'`
           )
         }
       }
 
       output.push({
         name,
-        type,
+        types,
         defaultValue,
       })
     }
@@ -209,7 +212,7 @@ class Functions {
     const argValues = {}
 
     for (let i = 0; i < func.args.length; i++) {
-      const { name, type, defaultValue } = func.args[i]
+      const { name, types, defaultValue } = func.args[i]
       const argExpression = args[i]
 
       if (!argExpression) {
@@ -223,9 +226,9 @@ class Functions {
 
       const argResult = this.logic.getExpressionValue(argExpression)
 
-      if (argResult.type !== type) {
+      if (!types.includes(argResult.type) && !types.includes(TYPES.any)) {
         throw new Error(
-          `Argument '${argExpression}' is of type ${argResult.type}, expected type '${type}'`
+          `Argument '${argExpression}' is of type ${argResult.type}, expected type '${types.join('|')}'`
         )
       }
 
