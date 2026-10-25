@@ -52,7 +52,16 @@ class Variables {
       name
     )
 
-    return this.variables[scopeKey][name]
+    const variableData = this.variables[scopeKey][name]
+
+    if (variableData.getValue && typeof variableData.getValue === 'function') {
+      return {
+        ...variableData,
+        value: variableData.getValue(),
+      }
+    }
+
+    return variableData
   }
 
   registerVariable(defType, type, name, value) {
