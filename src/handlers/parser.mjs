@@ -296,31 +296,31 @@ class Parser {
     }
 
     while (this.programCounter[id] < this.lines[id].length) {
-      // try {
-      const output = this.parseLine(id, functionInfo)
+      try {
+        const output = this.parseLine(id, functionInfo)
 
-      if (output) {
-        return output
+        if (output) {
+          return output
+        }
+      } catch (e) {
+        if (this.isErroring) {
+          return
+        }
+
+        const line =
+          (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
+
+        let error = `Error on line ${line + 1} - ${e.message}\n${this.lines[id][this.programCounter[id]].trim()}`
+
+        if (e.position) {
+          error += `\n${Array(Number(e.position.column)).fill('-').join('')}^`
+        }
+
+        this.programCounter[id] = this.lines[id].length
+        this.isErroring = true
+
+        throw new Error(error)
       }
-      // } catch (e) {
-      //   if (this.isErroring) {
-      //     return
-      //   }
-
-      //   const line =
-      //     (functionInfo ? functionInfo.startLine : 0) + this.programCounter[id]
-
-      //   let error = `Error on line ${line + 1} - ${e.message}\n${this.lines[id][this.programCounter[id]].trim()}`
-
-      //   if (e.position) {
-      //     error += `\n${Array(Number(e.position.column)).fill('-').join('')}^`
-      //   }
-
-      //   this.programCounter[id] = this.lines[id].length
-      //   this.isErroring = true
-
-      //   throw new Error(error)
-      // }
     }
   }
 
