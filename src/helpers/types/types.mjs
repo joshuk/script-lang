@@ -1,10 +1,9 @@
 import { TYPES } from '../../constants.mjs'
 import { isBoolean } from './boolean.mjs'
 import { isNumber } from './number.mjs'
-import { isString } from './string.mjs'
 
 export const getTokenType = token => {
-  if (isString(token, false)) {
+  if (typeof token === 'string') {
     return TYPES.string
   }
 

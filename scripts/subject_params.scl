@@ -1,0 +1,4 @@
+const test = 'hello'
+
+const fourSquared = pow(4, 2)
+const testUppercase = test.toUppercase()

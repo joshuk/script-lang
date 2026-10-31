@@ -29,17 +29,26 @@ import Parser from './src/handlers/parser.mjs'
         args: [
           {
             name: 'num',
-            type: TYPES.number,
+            types: [TYPES.number],
             defaultValue: null,
           },
           {
             name: 'power',
-            type: TYPES.number,
+            types: [TYPES.number],
             defaultValue: null,
           },
         ],
         getResult: (num, power) => {
           return Math.pow(num, power)
+        },
+      },
+      toUppercase: {
+        subject: {
+          types: [TYPES.string],
+        },
+        args: [],
+        getResult: subject => {
+          return subject.toUpperCase()
         },
       },
     },

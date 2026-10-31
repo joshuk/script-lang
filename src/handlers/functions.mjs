@@ -9,6 +9,7 @@ class Functions {
     this.logic = logic
 
     this.operators = [',']
+    this.subjectSeparator = '.'
 
     this.functions = {}
   }
@@ -100,11 +101,30 @@ class Functions {
       const nextToken = tokens[index + 1]
 
       if (this.isFunction(token) && Array.isArray(nextToken)) {
-        output.push({
+        const functionObject = {
           type: TYPES.function,
           name: token,
           args: this.formatArgTokens(nextToken),
-        })
+        }
+
+        const functionData = this.getFunction(token)
+
+        if (functionData.subject) {
+          const previousTokens = output.splice(-2, 2)
+
+          if (previousTokens[1] !== this.subjectSeparator) {
+            throw new Error(
+              `Function '${token}' requires subject. Format: SUBJECT.${token}()`
+            )
+          }
+
+          functionObject.subject = {
+            requiredTypes: functionData.subject.types,
+            token: previousTokens[0],
+          }
+        }
+
+        output.push(functionObject)
 
         index += 2
         continue
@@ -161,7 +181,7 @@ class Functions {
 
         if (types.includes(defaultValue.type)) {
           throw new Error(
-            `Default value '${defaultValueExpression}' is not of type '${rawType}'`
+            `Default value '${defaultValueExpression}' is not of type ${rawType}`
           )
         }
       }
@@ -228,7 +248,7 @@ class Functions {
 
       if (!types.includes(argResult.type) && !types.includes(TYPES.any)) {
         throw new Error(
-          `Argument '${argExpression}' is of type ${argResult.type}, expected type '${types.join('|')}'`
+          `Argument '${argExpression}' is of type ${argResult.type}, expected type ${types.join('|')}`
         )
       }
 
@@ -240,6 +260,7 @@ class Functions {
 
   getFunctionResult(token) {
     const { name, args: argInfo } = token
+    const subject = token.subject
     const func = this.getFunction(name)
 
     const args = this.validateArgs(name, argInfo)
@@ -249,7 +270,24 @@ class Functions {
     if (getResult && typeof getResult === 'function') {
       const resultArgs = Object.values(args).map(arg => arg.value)
 
-      let result = getResult(...resultArgs)
+      let result = null
+
+      if (subject) {
+        const subjectValue = this.logic.getExpressionValue(subject.token)
+
+        if (
+          !subject.requiredTypes.includes(subjectValue.type) &&
+          !subject.requiredTypes.includes(TYPES.any)
+        ) {
+          throw new Error(
+            `Subject '${subject.token}' is of type ${subjectValue.type}, expected type ${subject.requiredTypes.join('|')}`
+          )
+        }
+
+        result = getResult(subjectValue.value, ...resultArgs)
+      } else {
+        result = getResult(...resultArgs)
+      }
 
       return {
         type: getTokenType(result),
