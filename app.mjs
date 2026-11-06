@@ -20,7 +20,7 @@ import Parser from './src/handlers/parser.mjs'
         type: TYPES.number,
         value: 0,
         onChange: newValue => {
-          // console.log('New _x value', newValue)
+          console.log('New _x value', newValue)
         },
       },
     },

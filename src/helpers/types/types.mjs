@@ -18,4 +18,6 @@ export const getTokenType = token => {
   if (token === 'null') {
     return TYPES.null
   }
+
+  return false
 }

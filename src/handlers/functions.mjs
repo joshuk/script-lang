@@ -289,8 +289,18 @@ class Functions {
         result = getResult(...resultArgs)
       }
 
+      if (result.type && result.value) {
+        return result
+      }
+
+      const resultType = getTokenType(result)
+
+      if (resultType === false) {
+        throw new Error(`Could not determine type of value '${result}'`)
+      }
+
       return {
-        type: getTokenType(result),
+        type: resultType,
         value: result,
       }
     }
